@@ -103,7 +103,6 @@ function createPuzzlePieces() {
 function startDrag(e) {
     if (!gameActive) return;
     
-    // Prevent default to stop scrolling on touch devices
     if (e.type === 'touchstart') {
         e.preventDefault();
     }
@@ -111,10 +110,8 @@ function startDrag(e) {
     draggedPiece = this;
     draggedPiece.classList.add('dragging');
     
-    // Get the initial position of the piece
     const rect = draggedPiece.getBoundingClientRect();
     
-    // Calculate the offset from the mouse/touch position to the corner of the piece
     if (e.type === 'mousedown') {
         offsetX = e.clientX - rect.left;
         offsetY = e.clientY - rect.top;
@@ -123,14 +120,10 @@ function startDrag(e) {
         offsetY = e.touches[0].clientY - rect.top;
     }
     
-    // Move the piece to the top layer
     puzzleContainer.appendChild(draggedPiece);
     
-    // Add the move events for dragging
     document.addEventListener('mousemove', moveDrag);
     document.addEventListener('touchmove', moveDrag, { passive: false });
-    
-    // Add the end events for dropping
     document.addEventListener('mouseup', endDrag);
     document.addEventListener('touchend', endDrag);
 }
@@ -155,29 +148,25 @@ function moveDrag(e) {
     let newLeft = clientX - containerRect.left - offsetX;
     let newTop = clientY - containerRect.top - offsetY;
     
-    // Keep the piece within the container
     const pieceWidth = parseInt(draggedPiece.style.width);
     const pieceHeight = parseInt(draggedPiece.style.height);
     
     newLeft = Math.max(0, Math.min(newLeft, containerRect.width - pieceWidth));
     newTop = Math.max(0, Math.min(newTop, containerRect.height - pieceHeight));
     
-    // Update the position
     draggedPiece.style.left = `${newLeft}px`;
     draggedPiece.style.top = `${newTop}px`;
 }
 
-// End dragging and check if the piece is in the correct position
+// ✅ CORRIGIDO: End dragging and check if the piece is in the correct position
 function endDrag() {
     if (!draggedPiece) return;
     
-    // Remove the move and end events
     document.removeEventListener('mousemove', moveDrag);
     document.removeEventListener('touchmove', moveDrag);
     document.removeEventListener('mouseup', endDrag);
     document.removeEventListener('touchend', endDrag);
     
-    // Check if the piece is close to its correct position
     const containerWidth = puzzleContainer.clientWidth;
     const containerHeight = puzzleContainer.clientHeight;
     const pieceWidth = containerWidth / gridSize;
@@ -192,22 +181,21 @@ function endDrag() {
     const currentLeft = parseInt(draggedPiece.style.left);
     const currentTop = parseInt(draggedPiece.style.top);
     
-    // Define a threshold for "close enough" (10% of piece size)
     const threshold = Math.min(pieceWidth, pieceHeight) * 0.1;
     
     if (
         Math.abs(currentLeft - correctLeft) < threshold &&
         Math.abs(currentTop - correctTop) < threshold
     ) {
-        // Snap to the correct position
         draggedPiece.style.left = `${correctLeft}px`;
         draggedPiece.style.top = `${correctTop}px`;
         draggedPiece.classList.add('placed');
-        
-        // Check if the puzzle is complete
-        checkPuzzleCompletion();
+    } else {
+        draggedPiece.classList.remove('placed');
     }
-    
+
+    checkPuzzleCompletion();
+
     draggedPiece.classList.remove('dragging');
     draggedPiece = null;
 }
@@ -217,11 +205,9 @@ function checkPuzzleCompletion() {
     const allPlaced = puzzlePieces.every(piece => piece.classList.contains('placed'));
     
     if (allPlaced) {
-        // Stop the timer
         clearInterval(timerInterval);
         gameActive = false;
         
-        // Show the success message
         successMessage.style.display = 'block';
         completionTimeDisplay.textContent = formatTime(seconds);
 
@@ -254,16 +240,13 @@ function toggleOriginalImage() {
     originalImageShowing = !originalImageShowing;
     
     if (originalImageShowing) {
-        // Show the original image
         puzzleContainer.style.backgroundImage = `url(${images[currentImageIndex]})`;
         puzzleContainer.style.backgroundSize = 'cover';
         
-        // Hide the pieces temporarily
         puzzlePieces.forEach(piece => {
             piece.style.opacity = '0';
         });
         
-        // Set a timeout to automatically hide the original image after 2 seconds
         setTimeout(() => {
             puzzleContainer.style.backgroundImage = 'none';
             puzzlePieces.forEach(piece => {
@@ -288,18 +271,14 @@ window.addEventListener('resize', () => {
     const pieceHeight = containerHeight / gridSize;
     
     puzzlePieces.forEach(piece => {
-        // Update piece size
         piece.style.width = `${pieceWidth}px`;
         piece.style.height = `${pieceHeight}px`;
-        
-        // Update background size and position
         piece.style.backgroundSize = `${containerWidth}px ${containerHeight}px`;
         
         const row = parseInt(piece.dataset.row);
         const col = parseInt(piece.dataset.col);
         piece.style.backgroundPosition = `-${col * pieceWidth}px -${row * pieceHeight}px`;
         
-        // If piece is placed, update its position
         if (piece.classList.contains('placed')) {
             piece.style.left = `${col * pieceWidth}px`;
             piece.style.top = `${row * pieceHeight}px`;
@@ -307,5 +286,4 @@ window.addEventListener('resize', () => {
     });
 });
 
-// Initialize the game when the page loads
 window.addEventListener('load', initGame);
