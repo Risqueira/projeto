@@ -131,6 +131,7 @@ main {
     list-style: none;
     text-decoration: none;
     color: #3B4049;
+    margin-bottom: 20px
 }
 
 .letter a:hover {
